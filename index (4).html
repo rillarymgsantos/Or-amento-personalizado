@@ -1,0 +1,586 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gerador de Orçamentos RCSOL</title>
+<style>
+:root{--azul:#0B2A4A;--laranja:#F59E0B;--cinza:#F3F5F8;--borda:#D9DEE6;--texto:#1c2430}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;color:var(--texto);background:#E9EDF2}
+#app{max-width:900px;margin:0 auto;padding:16px}
+h1.app{font-size:22px;margin:8px 0 2px;color:var(--azul)}
+.sub{color:#5a6678;font-size:14px;margin:0 0 14px}
+.card{background:#fff;border:1px solid var(--borda);border-radius:12px;padding:16px;margin-bottom:14px}
+.card h2{font-size:16px;margin:0 0 10px;color:var(--azul)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+label{display:block;font-size:12px;color:#5a6678;margin-bottom:3px}
+input,select,textarea,button{font:inherit}
+input[type=text],input[type=password],select,textarea{width:100%;padding:8px 10px;border:1px solid var(--borda);border-radius:8px;background:#fff}
+textarea{min-height:70px}
+button{cursor:pointer;border:0;border-radius:8px;padding:10px 16px;background:var(--azul);color:#fff;font-weight:600}
+button.sec{background:#fff;color:var(--azul);border:1px solid var(--azul)}
+button.x{padding:4px 9px;background:#fff;color:#b00020;border:1px solid var(--borda)}
+.drop{border:2px dashed #9fb0c6;border-radius:12px;padding:22px;text-align:center;background:var(--cinza);color:#4a5568}
+.drop.on{background:#fff7e0;border-color:var(--laranja)}
+#status{font-size:14px;margin-top:8px;color:#4a5568}
+table.it{width:100%;border-collapse:collapse;font-size:14px}
+table.it td{padding:4px}
+table.it input[type=text]{padding:6px 8px}
+.res{display:grid;grid-template-columns:1fr auto;gap:4px 16px;font-size:14px}
+.res b.t{font-size:18px;color:var(--azul)}
+.warn{background:#fff7e0;border:1px solid #f3d27a;border-radius:8px;padding:8px 10px;font-size:13px;margin-top:8px}
+.agg{background:var(--cinza);border-radius:8px;padding:8px 10px;font-size:13px;margin-top:12px;line-height:1.6}
+details summary{cursor:pointer;font-weight:600;color:var(--azul)}
+pre#raw{white-space:pre-wrap;font-size:12px;background:var(--cinza);padding:8px;border-radius:8px;max-height:220px;overflow:auto}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* ===== Proposta ===== */
+#proposalWrap{max-width:820px;margin:0 auto 40px;padding:0 16px}
+.pg{background:#fff;color:#1c2430;padding:34px 38px;border-radius:6px;box-shadow:0 2px 12px rgba(0,0,0,.12);margin-bottom:16px}
+table.p2{width:100%;border-collapse:collapse;font-size:13px}
+table.p2 th{background:var(--cinza);text-align:left;padding:6px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+table.p2 td{padding:6px 8px;border-bottom:1px solid #edf0f4;vertical-align:top}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.steps div{border:1px solid var(--borda);border-radius:8px;padding:9px 10px;font-size:12px;line-height:1.45;background:var(--cinza)}
+.steps b{color:var(--azul);font-size:13px;display:block}
+.steps i{font-style:normal;color:var(--laranja);font-weight:800;font-size:16px}
+.ph{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid var(--laranja);padding-bottom:12px}
+.brand .w{font-size:30px;font-weight:800;letter-spacing:2px;color:var(--azul)}
+.brand .w span{color:var(--laranja)}
+.brand .s{font-size:10px;letter-spacing:5px;color:#5a6678}
+.brand img{max-height:58px;max-width:220px}
+.ph-r{text-align:right;font-size:12px;color:#4a5568;line-height:1.5}
+#proposal h1{margin:20px 0 0;font-size:30px;letter-spacing:3px;color:var(--azul)}
+#proposal h2{margin:2px 0 6px;font-size:20px;color:var(--laranja)}
+.meta{font-size:13px;color:#4a5568;margin:0 0 14px;line-height:1.5}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:12px 0 6px}
+.cards div{background:var(--azul);color:#fff;border-radius:8px;padding:9px 10px}
+.cards small{display:block;font-size:9px;letter-spacing:1.5px;opacity:.75;text-transform:uppercase}
+.cards b{font-size:14px}
+.psec{margin-top:20px;break-inside:avoid}
+.psec h3{margin:0 0 8px;font-size:16px;color:var(--azul);border-bottom:1px solid var(--borda);padding-bottom:5px}
+.psec h3 i{font-style:normal;color:var(--laranja);margin-right:8px}
+table.p{width:100%;border-collapse:collapse;font-size:13px}
+table.p th{background:var(--cinza);text-align:left;padding:6px 8px;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+table.p td{padding:6px 8px;border-bottom:1px solid #edf0f4}
+table.p td:last-child,table.p th:last-child{text-align:right;width:70px}
+ul.inc{margin:0;padding-left:18px;font-size:13px;line-height:1.7}
+.total{margin-top:10px;background:var(--azul);color:#fff;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.total small{letter-spacing:3px;font-size:11px;opacity:.8}
+.total b{font-size:28px;color:var(--laranja)}
+.gain{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.gain div{border:1px solid var(--borda);border-radius:8px;padding:9px 10px;background:var(--cinza)}
+.gain small{display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#5a6678}
+.gain b{font-size:16px;color:var(--azul)}
+.gain .ok{background:#ecfdf3;border-color:#a7e3bd}
+.pt{font-size:13px;line-height:1.55;margin:8px 0 0}
+.note{font-size:11px;color:#6b7686;margin-top:6px;line-height:1.4}
+.foot{margin-top:22px;border-top:1px solid var(--borda);padding-top:8px;font-size:11px;color:#6b7686;text-align:center}
+@page{size:A4;margin:10mm}
+@media print{
+  body{background:#fff}
+  #app{display:none!important}
+  #proposalWrap{max-width:none;padding:0;margin:0}
+  .pg{box-shadow:none;padding:0;border-radius:0;margin:0;break-after:page;page-break-after:always}
+  .pg:last-child{break-after:auto;page-break-after:auto}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+@media screen and (max-width:640px){
+  #app{padding:10px}
+  .card{padding:12px}
+  input[type=text],input[type=password],select,textarea{font-size:16px;padding:10px}
+  button{min-height:44px}
+  #pdf{width:100%}
+  .drop{padding:18px 10px}
+  #saz{grid-template-columns:repeat(3,1fr)!important}
+  table.it,table.it tbody{display:block;width:100%}
+  table.it tr.hd{display:none}
+  table.it tr{display:flex;flex-wrap:wrap;align-items:center;gap:6px;border:1px solid var(--borda);border-radius:8px;padding:8px;margin-bottom:8px}
+  table.it td{display:block;padding:0;width:auto!important}
+  table.it td:nth-child(1){order:1}
+  table.it td:nth-child(2){order:2;flex:1 1 calc(100% - 90px);min-width:0}
+  table.it td:nth-child(6){order:3}
+  table.it td:nth-child(3){order:4;flex:1 1 22%}
+  table.it td:nth-child(4){order:5;flex:2 1 40%}
+  table.it td:nth-child(5){order:6;flex:1.5 1 30%}
+  .pg{padding:18px}
+  .ph{flex-wrap:wrap;gap:8px}
+  .ph-r{text-align:left}
+  #proposal h1{font-size:24px}
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .gain{grid-template-columns:1fr}
+  .total{flex-direction:column;align-items:flex-start;gap:4px}
+  .total b{font-size:24px}
+  table.p,table.p2{font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1 class="app">Gerador de Orçamentos – RCSOL</h1>
+  <p class="sub">Suba o orçamento do fornecedor, confira os dados e gere o PDF do cliente.</p>
+
+  <div class="card">
+    <h2>1. Orçamento do fornecedor</h2>
+    <label style="display:flex;gap:6px;align-items:center;font-size:14px;color:var(--texto);margin-bottom:8px"><input type="checkbox" id="aiuse"> Usar IA para ler o orçamento (mais precisa, porém mais lenta)</label>
+    <details style="margin-bottom:10px"><summary>Chave da IA (Google AI Studio)</summary><div style="margin-top:8px"><input type="password" id="aikey" autocomplete="off" placeholder="cole a chave aqui"><p class="note">A chave fica salva só neste aparelho e não vai no arquivo. Com a IA ligada, o arquivo do orçamento é enviado ao Google para ser lido.</p></div></details>
+    <div class="drop" id="drop">
+      Arraste aqui o PDF ou a foto do orçamento<br>ou
+      <input type="file" id="file" accept="application/pdf,image/*" multiple style="margin-top:6px">
+    </div>
+    <div id="status"></div>
+    <details style="margin-top:8px"><summary>Colar o texto do orçamento (se a leitura do arquivo falhar)</summary>
+      <textarea id="pasteTxt" placeholder="Copie o texto do orçamento do fornecedor e cole aqui" style="margin-top:6px;min-height:110px"></textarea>
+      <div class="row" style="margin-top:6px"><button class="sec" id="pasteBtn">Ler texto colado</button></div></details>
+    <details style="margin-top:8px"><summary>Ver texto lido</summary><pre id="raw"></pre></details>
+  </div>
+
+  <div class="card" id="form">
+    <h2>2. Dados do orçamento (confira e corrija)</h2>
+    <div class="grid">
+      <div><label>Nome do cliente</label><input type="text" id="cliente"></div>
+      <div><label>Imóvel</label><select id="imovel"><option value="1">1 andar (casa térrea)</option><option value="2">2 andares ou mais</option></select></div>
+      <div><label>Ligação</label><select id="ligacao"><option value="mono">Monofásico (30 kWh)</option><option value="bi">Bifásico (50 kWh)</option><option value="tri">Trifásico (100 kWh)</option></select></div>
+      
+      
+      
+      <div><label>Material + frete do fornecedor (R$)</label><input type="text" id="mat" inputmode="decimal"></div>
+      <div><label>Consumo médio do cliente (kWh/mês) – opcional</label><input type="text" id="consumo" inputmode="decimal"></div>
+      <div><label>Estrutura (opcional)</label><input type="text" id="estrutura" placeholder="Ex.: Fibrocimento base madeira"></div>
+      <div><label>Frete</label><input type="text" id="frete" value="CIF"></div>
+    </div>
+    <div class="agg" id="agg"></div>
+    <h2 style="margin-top:16px">Materiais do orçamento do fornecedor (aparecem no seu orçamento)</h2>
+    <div style="overflow-x:auto"><table class="it"><tbody id="items"></tbody></table></div>
+    <div class="row" style="margin-top:8px"><button class="sec" id="addItem">+ Adicionar item</button></div>
+  </div>
+
+  <div class="card">
+    <h2>3. Resumo interno (não vai no PDF)</h2>
+    <div class="res" id="resumo"></div>
+    <div class="row" style="margin-top:14px"><button id="pdf">Gerar PDF</button><span style="font-size:13px;color:#5a6678">Na janela de impressão, escolha "Salvar como PDF".</span></div>
+  </div>
+
+  <div class="card">
+    <details id="cfgbox"><summary>Configurações (margem, valores, tarifa, textos, logo)</summary>
+      <div class="grid" id="cfg" style="margin-top:12px"></div>
+      <h2 style="margin-top:14px">Variação mensal da geração (1,00 = média)</h2>
+      <div class="grid" id="saz" style="grid-template-columns:repeat(6,1fr)"></div>
+      <p class="note">Valores iniciais são uma estimativa para o norte de Minas (chuvas de nov. a mar.). Ajuste se tiver dados melhores; a média é normalizada automaticamente para manter a irradiação configurada.</p>
+      <div style="margin-top:10px"><label>Logo (opcional)</label><input type="file" id="logo" accept="image/*"> <button class="sec" id="logoDel" style="padding:6px 10px">Remover logo</button></div>
+      <div style="margin-top:10px"><button class="sec" id="cfgReset">Restaurar padrões</button></div>
+    </details>
+  </div>
+</div>
+
+<div id="proposalWrap"><div id="proposal"></div></div>
+
+<script>
+const GEMINI_MODEL="gemini-2.5-flash";
+//CORE-START
+const MESES=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const DIAS=[31,28,31,30,31,30,31,31,30,31,30,31];
+const SAZ0=[.95,1.00,.95,.99,1.03,1.04,1.08,1.12,1.10,1.00,.88,.86];
+const DEF={margem:10,inst1:200,inst2:250,matInst:400,homolog:2000,hsp:5.68,perda:20,tarifa:1.1699378,fiob:15,validade:2,
+  empresa:"RCSOL Energia Solar",cnpj:"69.799.473/0001-05",tel:"+55 38 99933-8423",cidade:"Pirapora / MG",
+  pagamento:"O pagamento pode ser personalizado conforme a sua necessidade. Aceitamos:\n• Pagamento à vista;\n• Cartão de crédito em até 12x (juros repassados ao cliente);\n• Auxílio na contratação de linhas de financiamento e programas governamentais de crédito para energia solar.",
+  garantia:"",saz:SAZ0.slice()};
+
+function pn(v){v=String(v==null?"":v).trim();if(v.includes(","))v=v.replace(/\./g,"").replace(",",".");return parseFloat(v)||0;}
+
+/* Tipo do item: placa, inversor (inclui microinversor) ou outro */
+function classify(nome){
+  const exclInv=/cabo|string\s*box|stringbox|wi-?fi|stick|dongle|medidor|smart\s*meter|monitor|disjuntor|\bdps\b|suporte|estrutura|fixador|conector|perfil|kit\b/i;
+  if(/micro\s*-?\s*inv|inversor|\binv\b/i.test(nome)&&!exclInv.test(nome))return"inversor";
+  const exclPl=/cabo|string\s*box|stringbox|disjuntor|\bdps\b|fus[ií]vel|conector|suporte|fixador|grampo|perfil|estrutura|kit\b|parafuso|trilho|terminal|emenda|inversor|\binv\b|medidor|wi-?fi|stick|dongle|monitor|carregador|bateria/i;
+  if(!exclPl.test(nome)){
+    if(/placa|m[óo]dulo|painel|\bm[óo]d\b|bifaci|fotovolt|\bfv\b|monocristal|policristal|half[\s-]*cell|meia[\s-]*c[ée]lula|top\s*con|n[\s-]*type|\bperc\b|\bhjt\b|jinko|canadian|trina|longi|ja\s*solar|risen|byd|astronergy|dah\s*solar|osda|sunova|znshine|hanersun|ulica|sunergy/i.test(nome))return"placa";
+    if(/(?:^|\D)([3-7]\d\d|8[0-4]\d)\s*Wp?\b/i.test(nome))return"placa";
+  }
+  return"outro";
+}
+
+/* Potência unitária em watts, lida do nome do item */
+function powerW(nome,tipo){
+  let m;
+  if(tipo==="placa"){
+    if((m=nome.match(/(\d{3,4})\s*(?:a|à|até|-|–)\s*(\d{3,4})\s*W/i)))return{w:+m[1],faixa:true};
+    if((m=nome.match(/(\d{3,4})\s*Wp?\b/i)))return{w:+m[1],faixa:false};
+  }
+  if(tipo==="inversor"){
+    if((m=nome.match(/(\d+(?:[.,]\d+)?)\s*(kw|w)\b/i))){const v=pn(m[1]);return{w:Math.round(/^k/i.test(m[2])?v*1000:v)};}
+    if((m=nome.match(/(\d+(?:[.,]\d+)?)\s*ktl/i)))return{w:Math.round(pn(m[1])*1000)};
+  }
+  return{w:0};
+}
+
+/* Totais: soma de todas as placas e de todos os inversores/microinversores */
+function agg(items){
+  let placas=0,wpTot=0,invQ=0,invW=0;
+  for(const it of items){
+    const q=pn(it.qtd);
+    if(it.tipo==="placa"){placas+=q;wpTot+=q*(+it.w||0);}
+    else if(it.tipo==="inversor"){invQ+=q;invW+=q*(+it.w||0);}
+  }
+  return{placas,kwp:wpTot/1000,invQ,invKw:invW/1000};
+}
+
+function compute(p,c){
+  const kwp=p.kwp;
+  const pb=p.invKw>0?Math.min(kwp,p.invKw):kwp;
+  const instUn=p.andar2?c.inst2:c.inst1;
+  const base=p.mat*(1+c.margem/100);
+  const inst=instUn*p.placas;
+  const total=base+inst+c.matInst+c.homolog;
+  const saz=c.saz.map(Number);
+  const norm=saz.reduce((a,b)=>a+b,0)/12||1;
+  const ger=saz.map((s,i)=>pb*c.hsp*(s/norm)*DIAS[i]*(1-c.perda/100));
+  const anual=ger.reduce((a,b)=>a+b,0);
+  const media=anual/12;
+  const disp={mono:30,bi:50,tri:100}[p.ligacao]||30;
+  let eco=null;
+  if(p.consumo>0){
+    const comp=Math.min(media,Math.max(p.consumo-disp,0));
+    const econM=comp*c.tarifa*(1-c.fiob/100);
+    const antes=p.consumo*c.tarifa;
+    eco={potencial:false,comp,econM,econA:econM*12,antes,depois:antes-econM,payback:econM>0?total/econM:null,dispKwh:disp,dispRs:disp*c.tarifa};
+  }else if(media>0){
+    const econM=media*c.tarifa*(1-c.fiob/100);
+    eco={potencial:true,comp:media,econM,econA:econM*12,payback:econM>0?total/econM:null,dispKwh:disp,dispRs:disp*c.tarifa};
+  }
+  return{kwp,pb,base,inst,instUn,total,ger,anual,media,disp,eco};
+}
+
+const UNIT_END=/\s+(?:un|und|unid|unidades?|pc|pç|pcs|pçs)\.?$/i;
+function cleanLine(l){
+  l=l.replace(/[|;\t]/g," ").replace(/R\$\s*[\d.]+,\d{2}/g," ");
+  l=l.replace(/(\s\d{1,4})((?:\s+\d{1,3}(?:\.\d{3})*,\d{2}){1,3})\s*$/,"$1");
+  return l.replace(/\s+/g," ").trim().replace(UNIT_END,"");
+}
+function tidyName(n){
+  n=n.replace(/^\d{1,3}[.)-]?\s+(?=[A-Za-zÀ-ú0-9])/,"");
+  n=n.replace(/^\d{4,}\s+(?!w\b|kw|wp)/i,"");
+  return n.replace(UNIT_END,"").replace(/\s+/g," ").trim();
+}
+function parseText(text){
+  const lines=text.split("\n").map(s=>s.replace(/\s+/g," ").trim()).filter(Boolean);
+  const skip=/^(\d{1,2}[.)]?\s+)?(total|subtotal|valor|frete|r\$|pagamento|condi|validade|emitido|cnpj|cpf|prazo|data\b|cliente|fornecedor|produto\b|qtd|quant|item\b|itens\b|descri|c[óo]digo|desconto|acr[ée]scimo|imposto|icms|ipi|juros|parcela|entrada|saldo|vencimento|forma\b|proposta|pedido|telefone|tel\b|e-?mail|endere|cep\b|obs\b|observa|p[áa]gina|www|http|assinatura|emiss|vendedor|representante|garantia|previs|resumo|dados|v\s*a\s*l\s*o\s*r)/i;
+  const items=[];let pend=[];
+  for(let i=0;i<lines.length;i++){
+    const orig=lines[i];
+    if(skip.test(orig)||/^\d+\s*(unidades?|und?\.?)$/i.test(orig)){pend=[];continue;}
+    const l=cleanLine(orig);
+    if(!l)continue;
+    let m,nome,qtd;
+    if((m=l.match(/^(.*[A-Za-zÀ-ú].*?)\s+(\d{1,4})(?:,00)?$/))){nome=tidyName(m[1]);qtd=+m[2];}
+    else if((m=l.match(/^(\d{1,4})\s*(?:x|un\.?|und\.?|pç|pc)?\s+(.*[A-Za-zÀ-ú].*)$/i))){qtd=+m[1];nome=tidyName(m[2]);}
+    else if(/^\d{1,4}$/.test(l)&&pend.length){qtd=+l;nome=tidyName(pend.join(" "));}
+    if(nome&&qtd>0&&nome.length>=4){items.push({nome,qtd,mostrar:true});pend=[];}
+    else if(/[A-Za-zÀ-ú]{3}/.test(l)){
+      const next=lines[i+1]||"";
+      if(!pend.length&&items.length&&/^[a-zà-ú(]/.test(l)&&!/^\d{1,4}$/.test(next)){items[items.length-1].nome+=" "+l;}
+      else{pend.push(l);if(pend.length>2)pend.shift();}
+    }
+  }
+  for(const it of items){
+    it.tipo=classify(it.nome);
+    const pw=powerW(it.nome,it.tipo);
+    it.w=pw.w||0;it.faixa=!!pw.faixa;
+  }
+  const panels=items.filter(i=>i.tipo==="placa");
+  const mk=text.match(/(\d+(?:[.,]\d+)?)\s*kWp/i);
+  if(mk&&panels.length===1&&panels[0].qtd>0&&(!panels[0].w||panels[0].faixa))panels[0].w=Math.round(pn(mk[1])*1000/panels[0].qtd);
+  const vals=[...text.matchAll(/R\$\s*([\d.]+,\d{2})/g)].map(x=>pn(x[1]));
+  return{items,mat:vals.length?Math.max(...vals):0};
+}
+//CORE-END
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const brl=n=>n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const num=(n,d=0)=>n.toLocaleString("pt-BR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const prazo=m=>{m=Math.round(m);const a=Math.floor(m/12),r=m%12,A=a?a+(a>1?" anos":" ano"):"",M=r?r+(r>1?" meses":" mês"):"";return A&&M?A+" e "+M:(A||M||"menos de 1 mês");};
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+
+let cfg=JSON.parse(JSON.stringify(DEF));
+try{const s=JSON.parse(store.get("rcsol_cfg")||"null");if(s)cfg=Object.assign(cfg,s);if(!Array.isArray(cfg.saz)||cfg.saz.length!==12)cfg.saz=SAZ0.slice();}catch(e){}
+let logo=store.get("rcsol_logo")||"";
+let items=[];
+
+const NUMF=[["margem","Margem sobre material + frete (%)"],["inst1","Instalação por placa – 1 andar (R$)"],["inst2","Instalação por placa – 2+ andares (R$)"],["matInst","Material de instalação (R$)"],["homolog","Homologação (R$)"],["hsp","Irradiação (kWh/m²/dia)"],["perda","Perdas (%)"],["tarifa","Tarifa (R$/kWh)"],["fiob","Redução de economia por Fio B / Lei 14.300 (%)"],["validade","Validade do orçamento (dias)"]];
+const TXTF=[["empresa","Nome da empresa"],["cnpj","CNPJ"],["tel","Contato"],["cidade","Cidade"]];
+
+function buildCfg(){
+  $("#cfg").innerHTML=NUMF.map(([k,l])=>`<div><label>${l}</label><input type="text" data-c="${k}" value="${String(cfg[k]).replace(".",",")}"></div>`).join("")
+   +TXTF.map(([k,l])=>`<div><label>${l}</label><input type="text" data-t="${k}" value="${esc(cfg[k])}"></div>`).join("")
+   +`<div style="grid-column:1/-1"><label>Condições de pagamento</label><textarea data-t="pagamento">${esc(cfg.pagamento)}</textarea></div>`
+   +`<div style="grid-column:1/-1"><label>Garantia (deixe vazio para não aparecer)</label><textarea data-t="garantia">${esc(cfg.garantia)}</textarea></div>`;
+  $("#saz").innerHTML=cfg.saz.map((v,i)=>`<div><label>${MESES[i]}</label><input type="text" data-s="${i}" value="${String(v).replace(".",",")}"></div>`).join("");
+}
+function saveCfg(){store.set("rcsol_cfg",JSON.stringify(cfg));}
+
+function params(){
+  const a=agg(items);
+  return{placas:a.placas,kwp:a.kwp,invQ:a.invQ,invKw:a.invKw,mat:pn($("#mat").value),
+    andar2:$("#imovel").value==="2",ligacao:$("#ligacao").value,consumo:pn($("#consumo").value)};
+}
+function renderAgg(){
+  const a=agg(items);
+  let t=`<b>Placas:</b> ${num(a.placas)} un · ${num(a.kwp,2)} kWp &nbsp;|&nbsp; <b>Inversores / microinversores:</b> ${num(a.invQ)} un · ${num(a.invKw,2)} kW`;
+  if(!a.placas||!a.kwp)t+="<br>⚠ Não achei a quantidade ou a potência das placas. Na lista abaixo, marque o tipo \"Placa\" e preencha a potência unitária (W).";
+  if(a.invQ&&!a.invKw)t+="<br>⚠ Sem potência do inversor: preencha a potência unitária (W) dele na lista.";
+  if(!a.invQ)t+="<br>Nenhum inversor marcado: a geração usa só a potência das placas.";
+  $("#agg").innerHTML=t;
+}
+
+function renderItems(){
+  const head=`<tr class="hd" style="font-size:11px;color:#6b7686"><td></td><td>Material (como veio no orçamento do fornecedor)</td><td>Qtd.</td><td>Tipo</td><td>Potência unit. (W)</td><td></td></tr>`;
+  const opt=(it,v,l)=>`<option value="${v}" ${it.tipo===v?"selected":""}>${l}</option>`;
+  $("#items").innerHTML=items.length?head+items.map((it,i)=>`<tr><td style="width:28px"><input type="checkbox" data-i="${i}" data-k="mostrar" ${it.mostrar?"checked":""} title="Mostrar no orçamento"></td><td><input type="text" data-i="${i}" data-k="nome" placeholder="Material" value="${esc(it.nome)}"></td><td style="width:60px"><input type="text" data-i="${i}" data-k="qtd" placeholder="Qtd." value="${esc(it.qtd)}"></td><td style="width:130px"><select data-i="${i}" data-k="tipo">${opt(it,"outro","Outro")}${opt(it,"placa","Placa")}${opt(it,"inversor","Inversor ou micro")}</select></td><td style="width:100px"><input type="text" data-i="${i}" data-k="w" placeholder="Potência (W)" value="${it.w||""}"></td><td style="width:40px"><button class="x" data-del="${i}">✕</button></td></tr>`).join("")
+   :`<tr><td style="color:#6b7686;font-size:13px">Nenhum item ainda. Suba um orçamento ou adicione manualmente.</td></tr>`;
+}
+
+function chartSVG(ger){
+  const W=700,H=240,bw=40,gap=18,base=200,top=26;
+  const mx=Math.max(...ger)||1;
+  let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif">`;
+  ger.forEach((g,i)=>{
+    const h=(g/mx)*(base-top),x=i*(bw+gap)+4,y=base-h;
+    s+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" rx="4" fill="#F59E0B"/>`;
+    s+=`<text x="${x+bw/2}" y="${y-5}" font-size="11" text-anchor="middle" fill="#0B2A4A" font-weight="700">${num(g)}</text>`;
+    s+=`<text x="${x+bw/2}" y="${base+16}" font-size="12" text-anchor="middle" fill="#4a5568">${MESES[i]}</text>`;
+  });
+  s+=`<line x1="0" y1="${base}" x2="${W}" y2="${base}" stroke="#D9DEE6"/><text x="4" y="${H-4}" font-size="10" fill="#6b7686">kWh gerados por mês (estimativa)</text></svg>`;
+  return s;
+}
+
+function proposalHTML(p,r){
+  const hoje=new Date(),ate=new Date();ate.setDate(ate.getDate()+cfg.validade);
+  const f=d=>d.toLocaleDateString("pt-BR");
+  const brand=logo?`<img src="${logo}" alt="${esc(cfg.empresa)}">`:`<div class="w">RCSOL</div><div class="s">ENERGIA SOLAR</div>`;
+  const vis=items.filter(i=>i.mostrar&&i.nome.trim());
+  const est=$("#estrutura").value.trim(),fre=$("#frete").value.trim(),cli=$("#cliente").value.trim();
+  const e=r.eco;let n=0;
+  const S=(t,b)=>`<div class="psec"><h3><i>${String(++n).padStart(2,"0")}</i>${t}</h3>${b}</div>`;
+  const hdr=`<div class="ph"><div class="brand">${brand}</div><div class="ph-r">${esc(cfg.empresa)}<br>CNPJ ${esc(cfg.cnpj)}<br>${esc(cfg.tel)}</div></div>`;
+  const foot=`<div class="foot">${esc(cfg.empresa)} · CNPJ ${esc(cfg.cnpj)} · ${esc(cfg.cidade)} · ${esc(cfg.tel)} · Orçamento válido por ${cfg.validade} dias</div>`;
+  const pct=p.consumo>0?Math.min(100,r.media/p.consumo*100):0;
+  const proj=y=>{let s=0;for(let i=0;i<y;i++)s+=e.econA*Math.pow(.995,i);return s;};
+  const st=(a)=>`<div class="steps">${a.map((x,i)=>`<div><i>${i+1}</i> <b>${x[0]}</b>${x[1]}</div>`).join("")}</div>`;
+
+  /* ===== Página 1: o projeto ===== */
+  let h=`<div class="pg">${hdr}<h1>ORÇAMENTO</h1><h2>Kit Fotovoltaico ${num(r.kwp,2)} kWp</h2>
+  <p class="meta">Emitido em ${f(hoje)} · Válido por ${cfg.validade} dias (até ${f(ate)})<br>${esc(cfg.cidade)}${cli?" · Cliente: <b>"+esc(cli)+"</b>":""}</p>
+  <div class="cards"><div><small>Potência do kit</small><b>${num(r.kwp,2)} kWp</b></div><div><small>Placas</small><b>${num(p.placas)} unidades</b></div>${p.invQ?`<div><small>Inversor${p.invQ>1?"es":""}</small><b>${num(p.invQ)} un${p.invKw?" · "+num(p.invKw,2)+" kW":""}</b></div>`:""}${est?`<div><small>Estrutura</small><b>${esc(est)}</b></div>`:""}${fre?`<div><small>Frete</small><b>${esc(fre)}</b></div>`:""}</div>`;
+  h+=S("Resumo do seu projeto",`<p class="pt">Este orçamento apresenta um sistema de energia solar fotovoltaica de <b>${num(r.kwp,2)} kWp</b>, com <b>${num(p.placas)} placas</b>${p.invQ?` e ${num(p.invQ)} inversor${p.invQ>1?"es":""}`:""}. A estimativa é gerar, em média, <b>${num(r.media)} kWh por mês</b>${pct?`, o que cobre cerca de <b>${num(pct)}%</b> do seu consumo de ${num(p.consumo)} kWh/mês`:""}. A potência é medida em <b>kWp</b> (quilowatt-pico): quanto maior, mais energia o sistema produz. Já <b>kWh</b> é a unidade que aparece na sua conta de luz.</p>`);
+  h+=S("Itens inclusos",`<table class="p"><thead><tr><th>Produto</th><th>Qtd.</th></tr></thead><tbody>${vis.map(i=>`<tr><td>${esc(i.nome)}</td><td>${esc(i.qtd)}</td></tr>`).join("")}</tbody></table>
+  <p class="note"><b>Placas (módulos):</b> captam a luz do sol e a transformam em energia elétrica. <b>Inversor:</b> converte essa energia para a mesma forma usada na sua casa e controla o funcionamento do sistema. Os demais itens são a estrutura de fixação, os cabos e as proteções que garantem a instalação segura.</p>`);
+  h+=S("O que está incluso no valor",`<table class="p2"><thead><tr><th>Item</th><th>O que significa</th></tr></thead><tbody>
+  <tr><td><b>Materiais do kit</b></td><td>Todos os equipamentos listados acima${fre?", com frete "+esc(fre):""}.</td></tr>
+  <tr><td><b>Instalação</b></td><td>Montagem das placas, passagem dos cabos, conexão e configuração do inversor por equipe técnica.</td></tr>
+  <tr><td><b>Material complementar</b></td><td>Cabos, conectores, proteções e demais itens necessários para deixar o sistema pronto para uso.</td></tr>
+  <tr><td><b>Homologação</b></td><td>Projeto, solicitação de acesso e taxas da CEMIG, com acompanhamento até a ligação do sistema.</td></tr></tbody></table>
+  <div class="total"><small>VALOR TOTAL DO ORÇAMENTO</small><b>${brl(r.total)}</b></div>`);
+  h+=foot+`</div>`;
+
+  /* ===== Página 2: desempenho e economia ===== */
+  h+=`<div class="pg">${hdr}`;
+  h+=S("Previsão de geração",`${chartSVG(r.ger)}
+  <p class="pt">A geração varia ao longo do ano: nos meses de mais sol (inverno e primavera) o sistema produz mais, e no período de chuvas produz menos. A média, porém, se mantém ao longo do ano.</p>
+  <table class="p2"><tbody><tr><td>Potência considerada</td><td><b>${num(r.pb,2)} kW</b></td><td>Geração média mensal</td><td><b>${num(r.media)} kWh</b></td></tr>
+  <tr><td>Irradiação solar em ${esc(cfg.cidade)}</td><td><b>${num(cfg.hsp,2)} kWh/m²/dia</b></td><td>Geração anual</td><td><b>${num(r.anual)} kWh</b></td></tr>
+  <tr><td>Perdas consideradas</td><td><b>${num(cfg.perda)}%</b></td><td></td><td></td></tr></tbody></table>
+  <p class="note">As perdas incluem calor nas placas, sujeira, cabos e conversão no inversor. É um cálculo conservador, para você não ter surpresas.</p>`);
+  if(e){
+    const g=e.potencial
+      ?`<div class="gain"><div><small>Energia gerada por mês</small><b>${num(e.comp)} kWh</b></div><div class="ok"><small>Valor da energia gerada por mês</small><b>${brl(e.econM)}</b></div><div class="ok"><small>Valor em 12 meses</small><b>${brl(e.econA)}</b></div>${e.payback?`<div class="ok"><small>Sua usina se paga em</small><b>${prazo(e.payback)}</b></div>`:""}</div>`
+      :`<div class="gain"><div><small>Conta atual estimada</small><b>${brl(e.antes)}/mês</b></div><div><small>Conta estimada com solar</small><b>${brl(e.depois)}/mês</b></div><div class="ok"><small>Economia mensal</small><b>${brl(e.econM)}</b></div><div class="ok"><small>Economia em 12 meses</small><b>${brl(e.econA)}</b></div>${e.payback?`<div class="ok"><small>Sua usina se paga em</small><b>${prazo(e.payback)}</b></div>`:""}<div><small>Consumo considerado</small><b>${num(p.consumo)} kWh/mês</b></div></div>`;
+    let pj="";
+    if(e.econA>0)pj=`<table class="p2" style="margin-top:10px"><thead><tr><th>Em</th><th>Economia acumulada</th><th>Saldo (economia − investimento)</th></tr></thead><tbody>${[5,10,15,25].map(y=>`<tr><td>${y} anos</td><td>${brl(proj(y))}</td><td><b>${brl(proj(y)-r.total)}</b></td></tr>`).join("")}</tbody></table>
+    <p class="note">Projeção simples: considera a tarifa atual sem reajuste e uma perda de eficiência das placas de 0,5% ao ano. Se a tarifa subir, a economia tende a ser maior.</p>`;
+    h+=S("O que você ganha",`${g}
+    <p class="pt">${e.potencial?"A energia que o seu sistema gera abate o consumo da conta da CEMIG.":"Com a energia solar, você deixa de pagar a energia consumida e passa a pagar apenas o custo de disponibilidade."} O <b>custo de disponibilidade</b> é uma taxa mínima cobrada de toda ligação: ${e.dispKwh} kWh, cerca de ${brl(e.dispRs)}/mês, mais a taxa de iluminação pública.</p>
+    <p class="pt">Como calculamos: tarifa de <b>R$ ${num(cfg.tarifa,2)}/kWh</b>, com redução de <b>${num(cfg.fiob)}%</b> na economia para considerar o Fio B, parcela da tarifa que passou a ser cobrada sobre a energia injetada na rede pela Lei 14.300.</p>${pj}`);
+  }
+  h+=foot+`</div>`;
+
+  /* ===== Página 3: como funciona e condições ===== */
+  h+=`<div class="pg">${hdr}`;
+  h+=S("Como funciona a energia solar",st([["Captação","As placas recebem a luz do sol e geram energia elétrica."],["Conversão","O inversor transforma essa energia na usada em casa."],["Consumo e créditos","Sua casa usa a energia na hora. O que sobra vai para a rede da CEMIG e vira créditos."],["Economia","Os créditos abatem o consumo da rede na sua fatura de luz."]]));
+  h+=S("Etapas até o sistema ligado",st([["Aprovação","Você aprova o orçamento e definimos a forma de pagamento."],["Projeto","Elaboramos o projeto e solicitamos o acesso na CEMIG."],["Instalação","Nossa equipe instala as placas, o inversor e a parte elétrica."],["Vistoria","A CEMIG vistoria e troca o medidor, quando necessário."],["Ligado","Com a aprovação, o sistema entra em operação e começa a gerar."]])+`<p class="note">Os prazos de aprovação do projeto e de vistoria dependem da CEMIG.</p>`);
+  h+=S("Condições de pagamento",`<p class="pt">${esc(cfg.pagamento).replace(/\n/g,"<br>")}</p>`);
+  if(cfg.garantia.trim())h+=S("Garantia",`<p class="pt">${esc(cfg.garantia).replace(/\n/g,"<br>")}</p>`);
+  h+=S("Informações importantes",`<ul class="inc"><li>Os créditos de energia excedente têm validade de 60 meses (Lei 14.300/2022).</li><li>Por segurança, o sistema conectado à rede desliga sozinho quando falta energia da CEMIG e volta quando ela retorna.</li><li>Recomendamos limpar as placas e inspecionar o sistema periodicamente para manter o desempenho.</li><li>Este orçamento é válido por ${cfg.validade} dias, até ${f(ate)}.</li></ul>
+  <p class="note">As previsões de geração e economia são estimativas e podem variar conforme clima, sombreamento, consumo, tarifa e regras vigentes.</p>`);
+  h+=foot+`</div>`;
+  return h;
+}
+
+function update(){
+  renderAgg();
+  const p=params(),r=compute(p,cfg);
+  let res=`<span>Material + frete do fornecedor</span><span>${brl(p.mat)}</span>
+  <span>+ margem de ${num(cfg.margem,1)}%</span><span>${brl(p.mat*cfg.margem/100)}</span>
+  <span>Instalação (${p.andar2?"2+ andares":"1 andar"}: ${brl(r.instUn)} × ${num(p.placas)} placas)</span><span>${brl(r.inst)}</span>
+  <span>Material de instalação</span><span>${brl(cfg.matInst)}</span>
+  <span>Homologação</span><span>${brl(cfg.homolog)}</span>
+  <b class="t">Valor final ao cliente</b><b class="t">${brl(r.total)}</b>
+  <span>Potência do kit / considerada na geração</span><span>${num(r.kwp,2)} kWp / ${num(r.pb,2)} kW</span>
+  <span>Geração média estimada</span><span>${num(r.media)} kWh/mês</span>`;
+  if(r.eco)res+=`<span>${r.eco.potencial?"Valor da energia gerada (sem consumo) / retorno":"Economia mensal / retorno"}</span><span>${brl(r.eco.econM)} / ${r.eco.payback?prazo(r.eco.payback):"—"}</span>`;
+  $("#resumo").innerHTML=res;
+  if(!p.mat||!p.placas){$("#resumo").insertAdjacentHTML("beforeend",`<div class="warn" style="grid-column:1/-1">Preencha o nº de placas, a potência da placa e o valor do material + frete.</div>`);}
+  $("#proposal").innerHTML=proposalHTML(p,r);
+}
+
+/* ===== Leitura de arquivos ===== */
+function loadScript(src){return new Promise((ok,err)=>{const s=document.createElement("script");s.src=src;s.onload=ok;s.onerror=()=>err(new Error("Sem internet para carregar "+src));document.head.appendChild(s);});}
+async function ocr(img,st){
+  if(!window.Tesseract)await loadScript("https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js");
+  const r=await Tesseract.recognize(img,"por",{logger:m=>{if(m.status==="recognizing text")st("Lendo imagem (OCR)… "+Math.round(m.progress*100)+"%");}});
+  return r.data.text;
+}
+async function readPDF(file,st){
+  if(!window.pdfjsLib){await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+    pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";}
+  const pdf=await pdfjsLib.getDocument({data:await file.arrayBuffer()}).promise;
+  let lines=[];
+  for(let n=1;n<=pdf.numPages;n++){
+    const pg=await pdf.getPage(n),tc=await pg.getTextContent(),rows={};
+    tc.items.forEach(it=>{const y=Math.round(it.transform[5]/3);(rows[y]=rows[y]||[]).push(it);});
+    Object.keys(rows).map(Number).sort((a,b)=>b-a).forEach(y=>{
+      const t=rows[y].sort((a,b)=>a.transform[4]-b.transform[4]).map(i=>i.str).join(" ").replace(/\s+/g," ").trim();if(t)lines.push(t);});
+  }
+  let text=lines.join("\n");
+  if(text.replace(/\s/g,"").length<30){
+    st("PDF sem texto (escaneado). Usando OCR…");text="";
+    for(let n=1;n<=pdf.numPages;n++){
+      const pg=await pdf.getPage(n),vp=pg.getViewport({scale:2.2}),cv=document.createElement("canvas");
+      cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext("2d"),viewport:vp}).promise;
+      text+=await ocr(cv,st)+"\n";
+    }
+  }
+  return text;
+}
+//AI-START
+const AI_PROMPT="Você lê orçamentos de kits de energia solar fotovoltaica enviados por fornecedores. Extraia TODOS os materiais listados, com a quantidade exata de cada um, mantendo o nome completo e as descrições como estão no documento. Para cada item informe: nome; qtd (número); tipo ('placa' para QUALQUER módulo/painel/placa fotovoltaica, mesmo que o nome seja só 'módulo', 'bifacial', 'mono half cell', 'TOPCon', 'N-Type' ou apenas marca + potência (ex.: 'Jinko 580W'), 'inversor' para inversores e microinversores, 'outro' para o restante); w (potência unitária em watts quando aparecer no nome ou na descrição, por exemplo 4 kW = 4000; use 0 se não aparecer; para faixas como 'de 620 a 715 W' use o menor valor). Se houver mais de um inversor ou microinversor, liste cada linha separadamente. Informe também total_material: o valor total do orçamento do fornecedor em reais (número, 0 se não houver). Não invente itens e não some nem una linhas diferentes. Responda somente com JSON no formato {\"itens\":[{\"nome\":\"\",\"qtd\":0,\"tipo\":\"\",\"w\":0}],\"total_material\":0}.";
+function aiCfg(){const k=$("#aikey").value.trim();return{key:k,model:GEMINI_MODEL,use:!!k&&$("#aiuse").checked};}
+function fileB64(f){return new Promise((ok,err)=>{const r=new FileReader();r.onload=()=>ok(String(r.result).split(",")[1]);r.onerror=()=>err(new Error("não consegui abrir o arquivo"));r.readAsDataURL(f);});}
+function mapAI(d){
+  return(d.itens||[]).filter(i=>i&&i.nome).map(i=>{
+    const nome=String(i.nome).replace(/\s+/g," ").trim();
+    let tipo=["placa","inversor","outro"].includes(i.tipo)?i.tipo:classify(nome);
+    if(tipo==="outro")tipo=classify(nome);
+    let w=Math.round(+i.w||0);
+    if(!w&&tipo!=="outro")w=powerW(nome,tipo).w||0;
+    return{nome,qtd:+i.qtd||1,mostrar:true,tipo,w};
+  });
+}
+async function readAI(f,ai){
+  const mime=f.type||(/\.pdf$/i.test(f.name)?"application/pdf":"image/jpeg");
+  const body={contents:[{parts:[{text:AI_PROMPT},{inline_data:{mime_type:mime,data:await fileB64(f)}}]}],generationConfig:{responseMimeType:"application/json",temperature:0,thinkingConfig:{thinkingBudget:0}}};
+  const ctl=new AbortController(),tm=setTimeout(()=>ctl.abort(),60000);
+  const resp=await fetch("https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(ai.model)+":generateContent?key="+encodeURIComponent(ai.key),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body),signal:ctl.signal}).finally(()=>clearTimeout(tm));
+  const j=await resp.json().catch(()=>({}));
+  if(!resp.ok){const er=new Error((j.error&&j.error.message)||("erro "+resp.status));er.status=resp.status;throw er;}
+  let txt=(((j.candidates||[])[0]||{}).content||{parts:[]}).parts.map(p=>p.text||"").join("");
+  txt=txt.replace(/^```(?:json)?\s*|\s*```$/g,"").trim();
+  const d=JSON.parse(txt);
+  return{items:mapAI(d),mat:+d.total_material||0,raw:txt};
+}
+async function readAIRetry(f,ai,st){
+  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  for(let t=1;;t++){
+    try{return await readAI(f,ai);}
+    catch(e){
+      const msg=e.name==="AbortError"?"demorou demais":e.message;
+      if(t>=3||[400,401,403,404].includes(e.status))throw new Error(msg);
+      for(let s=8;s>0;s--){st("IA falhou ("+msg+"). Nova tentativa "+(t+1)+"/3 em "+s+"s…");await sleep(1000);}
+    }
+  }
+}
+//AI-END
+async function handleFiles(files){
+  const st=m=>{$("#status").textContent=m;};
+  const ai=aiCfg();
+  if(ai.use&&ai.key){
+    try{
+      let its=[],mat=0,rawAll="";
+      st("IA lendo "+files.length+" arquivo(s)…");
+      const rs=await Promise.all(files.map(f=>readAIRetry(f,ai,st)));
+      rs.forEach(r=>{its=its.concat(r.items);mat=Math.max(mat,r.mat);rawAll+=r.raw+"\n";});
+      $("#raw").textContent=rawAll;
+      items=its;renderItems();
+      if(mat)$("#mat").value=num(mat,2);
+      const a=agg(items);
+      st(`IA: ${items.length} itens, ${num(a.placas)} placas e ${num(a.invQ)} inversor(es) encontrados. Confira tudo antes de gerar o PDF (principalmente potências e o valor de material + frete).`);
+      update();return;
+    }catch(e){
+      st("A leitura por IA falhou ("+e.message+"). Usando a leitura local…");
+      await new Promise(r=>setTimeout(r,1800));
+    }
+  }
+  let all="";
+  try{
+    for(const f of files){
+      st("Lendo "+f.name+"…");
+      all+=(f.type==="application/pdf"||/\.pdf$/i.test(f.name)?await readPDF(f,st):await ocr(f,st))+"\n";
+    }
+  }catch(e){st("Erro na leitura: "+e.message+". Você pode preencher os campos manualmente.");return;}
+  applyLocal(all,st);
+}
+function applyLocal(all,st){
+  $("#raw").textContent=all;
+  const o=parseText(all);
+  items=o.items;renderItems();
+  if(o.mat)$("#mat").value=num(o.mat,2);
+  const a=agg(items);
+  st(items.length?`Pronto: ${items.length} itens, ${num(a.placas)} placas e ${num(a.invQ)} inversor(es) encontrados. Confira tudo abaixo antes de gerar o PDF (principalmente as potências e o valor de material + frete).`:"Não consegui identificar itens. Veja o texto lido e preencha manualmente.");
+  update();
+}
+
+/* ===== Eventos ===== */
+$("#file").addEventListener("change",e=>{if(e.target.files.length)handleFiles([...e.target.files]);});
+const drop=$("#drop");
+["dragover","dragenter"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add("on");}));
+["dragleave","drop"].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove("on");}));
+drop.addEventListener("drop",e=>{if(e.dataTransfer.files.length)handleFiles([...e.dataTransfer.files]);});
+
+$("#form").addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.i!==undefined){const it=items[+t.dataset.i],k=t.dataset.k;it[k]=k==="mostrar"?t.checked:(k==="w"?pn(t.value):t.value);}
+  update();
+});
+$("#form").addEventListener("click",e=>{
+  if(e.target.dataset.del!==undefined){items.splice(+e.target.dataset.del,1);renderItems();update();}
+});
+$("#addItem").addEventListener("click",()=>{items.push({nome:"",qtd:1,mostrar:true,tipo:"outro",w:0});renderItems();update();});
+
+$("#cfg").addEventListener("input",e=>{
+  const t=e.target;
+  if(t.dataset.c)cfg[t.dataset.c]=pn(t.value);
+  if(t.dataset.t)cfg[t.dataset.t]=t.value;
+  saveCfg();update();
+});
+$("#saz").addEventListener("input",e=>{
+  const i=e.target.dataset.s;if(i===undefined)return;
+  cfg.saz[+i]=pn(e.target.value)||0;saveCfg();update();
+});
+$("#cfgReset").addEventListener("click",()=>{cfg=JSON.parse(JSON.stringify(DEF));saveCfg();buildCfg();update();});
+$("#logo").addEventListener("change",e=>{
+  const f=e.target.files[0];if(!f)return;
+  const rd=new FileReader();rd.onload=()=>{logo=rd.result;store.set("rcsol_logo",logo);update();};rd.readAsDataURL(f);
+});
+$("#logoDel").addEventListener("click",()=>{logo="";store.del("rcsol_logo");update();});
+$("#pasteBtn").addEventListener("click",()=>applyLocal($("#pasteTxt").value,m=>{$("#status").textContent=m;}));
+$("#pdf").addEventListener("click",()=>{update();window.print();});
+
+$("#aikey").value=store.get("rcsol_aikey")||"";
+$("#aikey").addEventListener("input",e=>store.set("rcsol_aikey",e.target.value.trim()));
+$("#aiuse").checked=store.get("rcsol_aiuse")!=="0";
+$("#aiuse").addEventListener("change",e=>store.set("rcsol_aiuse",e.target.checked?"1":"0"));
+buildCfg();renderItems();update();
+</script>
+</body>
+</html>
