@@ -574,7 +574,11 @@ $("#logo").addEventListener("change",e=>{
 });
 $("#logoDel").addEventListener("click",()=>{logo="";store.del("rcsol_logo");update();});
 $("#pasteBtn").addEventListener("click",()=>applyLocal($("#pasteTxt").value,m=>{$("#status").textContent=m;}));
-$("#pdf").addEventListener("click",()=>{update();window.print();});
+const T0=document.title;
+function tituloPDF(){const c=$("#cliente").value.trim().replace(/[\\/:*?"<>|]+/g," ").replace(/\s+/g," ").trim();document.title=(c?c+" - ":"")+"Orçamento";}
+window.addEventListener("beforeprint",tituloPDF);
+window.addEventListener("afterprint",()=>{document.title=T0;});
+$("#pdf").addEventListener("click",()=>{update();tituloPDF();window.print();});
 
 $("#aikey").value=store.get("rcsol_aikey")||"";
 $("#aikey").addEventListener("input",e=>store.set("rcsol_aikey",e.target.value.trim()));
